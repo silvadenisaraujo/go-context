@@ -2,29 +2,11 @@ package main
 
 import (
 	"net/http"
-	"time"
 
-	"go-context/process"
+	"go-context/demo"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
-
-// RequestInfoMiddleware generates a request ID and timestamp and adds them to the context
-func RequestInfoMiddleware(c *gin.Context) {
-	// Generate unique request ID
-	requestID := uuid.New().String()
-
-	// Get current timestamp
-	timestamp := time.Now()
-
-	// Add values to the context
-	c.Set("requestID", requestID)
-	c.Set("timestamp", timestamp)
-
-	// Continue processing
-	c.Next()
-}
 
 func main() {
 	// Force colored logging
@@ -34,7 +16,10 @@ func main() {
 	r := gin.Default()
 
 	// Apply the request info middleware to all routes
-	r.Use(RequestInfoMiddleware)
+	r.Use(demo.RequestInfoMiddleware)
+
+	// Add the client cancellation middleware
+	r.Use(demo.ClientCancellationMiddleware())
 
 	// Define a route that responds to a GET request at /ping
 	r.GET("/ping", func(c *gin.Context) {
@@ -43,8 +28,8 @@ func main() {
 		})
 	})
 
-	// Add the new /process endpoint
-	r.GET("/process", process.ProcessHandler)
+	// Setup demo endpoints
+	demo.SetupRoutes(r)
 
 	// Run the server on port 8080
 	r.Run(":8080")
