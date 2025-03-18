@@ -5,36 +5,10 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
-
-// Global map to store cancellation functions
-var activeRequests = sync.Map{}
-
-// CancelHandler demonstrates manual cancellation of in-progress requests.
-// It looks up a request by ID and cancels its context if found.
-// Example: /cancel/req-123456
-func CancelHandler(c *gin.Context) {
-	requestID := c.Param("requestID")
-
-	// Get and call the cancel function
-	if cancelFunc, ok := activeRequests.Load(requestID); ok {
-		cancelFunc.(context.CancelFunc)()
-		c.JSON(http.StatusOK, gin.H{
-			"message":   "Request canceled",
-			"requestID": requestID,
-		})
-		return
-	}
-
-	c.JSON(http.StatusNotFound, gin.H{
-		"error":     "Request not found",
-		"requestID": requestID,
-	})
-}
 
 // ProcessHandler demonstrates context timeout by processing a request with a configurable
 // timeout. If processing takes longer than the specified timeout, the operation is canceled
@@ -265,7 +239,6 @@ func SetupRoutes(r *gin.Engine) {
 
 	// Set up the routes
 	r.GET("/process", ProcessHandler)
-	r.GET("/cancel/:requestID", CancelHandler)
 	r.GET("/demo-parent-cancel", DemoParentCancellation)
 	r.GET("/never-respond", NeverRespondWithGoContextHandler)
 	r.GET("/never-respond-timeout", NeverRespondWithTimeoutContextHandler)
